@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+chan Button;</declaration>
+	<template>
+		<name>TrafficLight</name>
+		<declaration>clock x,y;
+int time = 0;</declaration>
+		<location id="id0" x="-662" y="-314">
+			<name x="-756" y="-340">RedLight</name>
+			<label kind="exponentialrate" x="-799" y="-178">(15*time)/(y+1)&lt;0.2</label>
+		</location>
+		<location id="id1" x="-467" y="-314">
+			<name x="-458" y="-348">GreenLight</name>
+			<label kind="invariant" x="-477" y="-297">x&lt;=15</label>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<nail x="-731" y="-221"/>
+			<nail x="-816" y="-297"/>
+			<nail x="-731" y="-391"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-620" y="-212">x==15</label>
+			<label kind="assignment" x="-619" y="-229">x := 0</label>
+			<nail x="-492" y="-229"/>
+			<nail x="-637" y="-229"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-610" y="-416">Button?</label>
+			<nail x="-628" y="-399"/>
+			<nail x="-509" y="-399"/>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">button</name>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id2" x="-374" y="-187">
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-322" y="-233">Button!</label>
+			<nail x="-340" y="-246"/>
+			<nail x="-255" y="-187"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+//Process = Template();
+// List one or more processes to be composed into a system.
+system button,TrafficLight;
+    </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

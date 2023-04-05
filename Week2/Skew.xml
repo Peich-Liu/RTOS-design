@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.</declaration>
+	<template>
+		<name x="5" y="5">Skew</name>
+		<declaration>// Place local declarations here.
+clock x;</declaration>
+		<location id="id0" x="-1232" y="-1122">
+			<name x="-1242" y="-1156">e</name>
+			<label kind="invariant" x="-1292" y="-1105">x&lt;=11</label>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-1138" y="-1181">x&gt;=9</label>
+			<label kind="assignment" x="-1138" y="-1164">x := 0</label>
+			<nail x="-1164" y="-1182"/>
+			<nail x="-1130" y="-1071"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+Process = Skew();
+// List one or more processes to be composed into a system.
+system Process;
+    </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

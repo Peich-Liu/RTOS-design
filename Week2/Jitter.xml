@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+chan Send,Receive;</declaration>
+	<template>
+		<name x="5" y="5">Jitter</name>
+		<declaration>// Place local declarations here.
+clock x;</declaration>
+		<location id="id0" x="-2788" y="-2320">
+			<name x="-2915" y="-2354">Sender</name>
+			<label kind="invariant" x="-2830" y="-2303">x&lt;=10</label>
+		</location>
+		<location id="id1" x="-2559" y="-2320">
+			<name x="-2542" y="-2362">Jitter</name>
+			<label kind="invariant" x="-2569" y="-2303">x&lt;=1</label>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-2694" y="-2252">Send!</label>
+			<label kind="assignment" x="-2694" y="-2235">x := 0</label>
+			<nail x="-2593" y="-2235"/>
+			<nail x="-2712" y="-2235"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-2736" y="-2439">x == 10</label>
+			<label kind="assignment" x="-2736" y="-2405">x:=0</label>
+			<nail x="-2754" y="-2405"/>
+			<nail x="-2627" y="-2405"/>
+		</transition>
+	</template>
+	<template>
+		<name>Receiver</name>
+		<location id="id2" x="0" y="0">
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="18" y="-59">Send?</label>
+			<nail x="68" y="-85"/>
+			<nail x="110" y="17"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+//Process = Jitter();
+// List one or more processes to be composed into a system.
+system Jitter,Receiver;
+    </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

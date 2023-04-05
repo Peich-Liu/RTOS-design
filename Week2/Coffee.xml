@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>//Insert declarations of global clocks, variables, constants and channels.
+urgent chan coin;
+urgent chan coffee;
+urgent chan tweet;</declaration>
+	<template>
+		<name x="5" y="5">Person</name>
+		<declaration>//Insert local declarations of clocks, variables and constants.
+clock y;</declaration>
+		<location id="id0" x="128" y="288">
+			<name x="48" y="304">Get_coffee</name>
+		</location>
+		<location id="id1" x="128" y="96">
+			<name x="80" y="80">Start</name>
+		</location>
+		<location id="id2" x="128" y="192">
+			<name x="72" y="160">Break</name>
+			<label kind="invariant" x="72" y="184">y&lt;=3</label>
+		</location>
+		<location id="id3" x="256" y="288">
+			<name x="280" y="280">Sipping</name>
+			<label kind="invariant" x="240" y="304">y&lt;=5</label>
+		</location>
+		<location id="id4" x="256" y="192">
+			<name x="272" y="176">Inspired</name>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="168" y="264">coffee?</label>
+			<label kind="assignment" x="168" y="288">y := 0</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="136" y="120">coin!</label>
+			<label kind="assignment" x="136" y="136">y:=0</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="guard" x="264" y="248">y&gt;=2</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="264" y="120">tweet!</label>
+			<nail x="256" y="96"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="guard" x="136" y="224">y==3</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Machine</name>
+		<parameter>const int t_min, const int t_max, const int t_lim</parameter>
+		<declaration>clock x;
+</declaration>
+		<location id="id5" x="160" y="64">
+			<name x="120" y="40">Idle</name>
+		</location>
+		<location id="id6" x="160" y="160">
+			<name x="96" y="128">Brewing</name>
+			<label kind="invariant" x="176" y="152">x&lt;=t_max</label>
+		</location>
+		<location id="id7" x="160" y="256">
+			<name x="112" y="224">Ready</name>
+			<label kind="invariant" x="150" y="271">x&lt;=t_lim</label>
+		</location>
+		<init ref="id5"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="168" y="88">coin?</label>
+			<label kind="assignment" x="168" y="104">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="guard" x="168" y="192">x&gt;=t_min</label>
+			<label kind="assignment" x="168" y="208">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id5"/>
+			<label kind="guard" x="-8" y="160">x==t_lim</label>
+			<nail x="64" y="256"/>
+			<nail x="64" y="64"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="264" y="128">coffee!</label>
+			<nail x="256" y="256"/>
+			<nail x="256" y="64"/>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Follower</name>
+		<declaration>clock z;</declaration>
+		<location id="id8" x="160" y="64">
+			<name x="176" y="48">Init</name>
+		</location>
+		<location id="id9" x="160" y="160">
+			<name x="176" y="144">Happy</name>
+		</location>
+		<location id="id10" x="160" y="256">
+			<name x="176" y="240">Disappointed</name>
+		</location>
+		<init ref="id8"/>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="168" y="88">tweet?</label>
+			<label kind="assignment" x="168" y="104">z:=0</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="guard" x="168" y="192">z&gt;10</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="40" y="136">tweet?</label>
+			<label kind="assignment" x="48" y="152">z:=0</label>
+			<nail x="96" y="192"/>
+			<nail x="96" y="128"/>
+		</transition>
+	</template>
+	<system>//Insert process assignments.
+Coffee = Machine(1,4,3);
+//Edit system definition.
+system Person, Follower, Coffee;</system>
+	<queries>
+		<query>
+			<formula>A[] not deadlock
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; Follower.Happy
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; not Follower.Init
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] not Follower.Disappointed
+			</formula>
+			<comment>
+			</comment>
+		</query>
+	</queries>
+</nta>

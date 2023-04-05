@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Channels should be urgent to ensture that actions happen ASAP
+urgent chan coin;
+urgent chan coffee;
+urgent chan tweet;</declaration>
+	<template>
+		<name x="5" y="5">Person</name>
+		<declaration>//Insert local declarations of clocks, variables and constants.
+clock y;</declaration>
+		<location id="id0" x="128" y="288">
+			<name x="48" y="304">Get_coffee</name>
+		</location>
+		<location id="id1" x="128" y="96">
+			<name x="80" y="80">Start</name>
+		</location>
+		<location id="id2" x="128" y="192">
+			<name x="72" y="160">Break</name>
+			<label kind="invariant" x="72" y="184">y&lt;=3</label>
+		</location>
+		<location id="id3" x="256" y="288">
+			<name x="280" y="280">Sipping</name>
+			<label kind="invariant" x="240" y="304">y&lt;=5</label>
+		</location>
+		<location id="id4" x="256" y="192">
+			<name x="272" y="176">Inspired</name>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="168" y="264">coffee?</label>
+			<label kind="assignment" x="168" y="288">y := 0</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="136" y="120">coin!</label>
+			<label kind="assignment" x="136" y="136">y:=0</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="guard" x="264" y="248">y&gt;=2</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="264" y="120">tweet!</label>
+			<nail x="256" y="96"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="guard" x="136" y="224">y==3</label>
+		</transition>
+	</template>
+	<template>
+		<name>Machine</name>
+		<location id="id5" x="-119" y="-390">
+			<name x="-129" y="-424">Idle</name>
+		</location>
+		<location id="id6" x="-119" y="-314">
+			<name x="-187" y="-331">brew</name>
+			<label kind="invariant" x="-187" y="-314">x&lt;tmax</label>
+		</location>
+		<location id="id7" x="-119" y="-237">
+			<name x="-93" y="-246">ready</name>
+			<label kind="invariant" x="-93" y="-229">x&lt;tlim</label>
+		</location>
+		<init ref="id5"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="26" y="-297">coffee?</label>
+			<nail x="17" y="-390"/>
+			<nail x="17" y="-169"/>
+			<nail x="-119" y="-169"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id5"/>
+			<label kind="guard" x="-289" y="-323">x==tlim</label>
+			<nail x="-221" y="-237"/>
+			<nail x="-221" y="-390"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-102" y="-280">x&gt;=tmin</label>
+			<label kind="assignment" x="-102" y="-297">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-110" y="-374">coin?</label>
+			<label kind="assignment" x="-110" y="-357">x:=0</label>
+		</transition>
+	</template>
+	<system>//Insert process assignments.
+
+//Edit system definition.
+system Person,Machine;</system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

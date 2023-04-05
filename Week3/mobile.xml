@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>//Insert declarations of global clocks, variables, constants and channels.
+// communications between AccessControl and Person
+chan pincode, success, quit, poweroff, warning;
+int pinvalue;</declaration>
+	<template>
+		<name x="304" y="56">User</name>
+		<location id="id0" x="320" y="128">
+			<name x="304" y="96">Init</name>
+		</location>
+		<location id="id1" x="320" y="288">
+			<name x="296" y="304">Input</name>
+		</location>
+		<location id="id2" x="512" y="288">
+			<name x="504" y="304">Wait</name>
+		</location>
+		<location id="id3" x="512" y="128">
+			<name x="496" y="96">Using</name>
+		</location>
+		<location id="id4" x="637" y="127">
+			<name x="597" y="95">Warning</name>
+		</location>
+		<location id="id5" x="739" y="127">
+			<name x="729" y="93">PowerOff</name>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="637" y="204">poweroff?</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id0"/>
+			<nail x="739" y="17"/>
+			<nail x="314" y="17"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="655" y="110">poweroff?</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="328" y="192">pincode?</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="assignment" x="368" y="288">pinvalue := 1234</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="520" y="200">success?</label>
+			<nail x="512" y="272"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="400" y="104">quit!</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="392" y="232">pincode?</label>
+			<nail x="464" y="256"/>
+			<nail x="368" y="256"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="530" y="110">warning?</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="assignment" x="368" y="320">pinvalue := 1235</label>
+			<nail x="368" y="320"/>
+			<nail x="464" y="320"/>
+		</transition>
+	</template>
+	<template>
+		<name x="64" y="56">AccessControl</name>
+		<declaration>//Insert local declarations of clocks, variables and constants.
+const int pin = 1234;  //user pin code
+int WrongTime = 0;
+clock x;
+</declaration>
+		<location id="id6" x="90" y="128">
+			<name x="80" y="98">Init</name>
+			<label kind="invariant" x="-34" y="136">WrongTime &lt;= 3</label>
+		</location>
+		<location id="id7" x="90" y="288">
+			<name x="50" y="304">CheckInput</name>
+		</location>
+		<location id="id8" x="250" y="288">
+			<name x="226" y="304">InputOK</name>
+		</location>
+		<location id="id9" x="246" y="127">
+			<name x="214" y="95">Working</name>
+			<label kind="invariant" x="190" y="135">x&lt;=95</label>
+		</location>
+		<location id="id10" x="374" y="127">
+			<name x="350" y="95">Inform</name>
+			<label kind="invariant" x="364" y="144">x&lt;100</label>
+		</location>
+		<location id="id11" x="378" y="288">
+			<name x="346" y="304">Warning</name>
+			<label kind="invariant" x="348" y="323">x&lt;=100</label>
+		</location>
+		<location id="id12" x="467" y="289">
+			<name x="459" y="306">PowerOff</name>
+		</location>
+		<init ref="id6"/>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-153" y="399">WrongTime == 3</label>
+			<label kind="synchronisation" x="-127" y="416">poweroff!</label>
+			<nail x="-43" y="42"/>
+			<nail x="-221" y="289"/>
+			<nail x="42" y="442"/>
+			<nail x="467" y="433"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id6"/>
+			<label kind="assignment" x="306" y="34">WrongTime := 0</label>
+			<nail x="467" y="59"/>
+			<nail x="85" y="59"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="guard" x="396" y="254">x==100</label>
+			<label kind="synchronisation" x="396" y="271">poweroff!</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="guard" x="93" y="221">WrongTime&lt;3</label>
+			<label kind="synchronisation" x="98" y="184">pincode!</label>
+			<label kind="assignment" x="98" y="200">pinvalue := 0</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+			<label kind="guard" x="122" y="264">pinvalue == pin</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-30" y="184">pinvalue != 0 and
+pinvalue != pin</label>
+			<label kind="assignment" x="-34" y="221">WrongTime ++</label>
+			<nail x="-38" y="288"/>
+			<nail x="-38" y="128"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="258" y="184">success!</label>
+			<label kind="assignment" x="258" y="200">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="154" y="104">quit?</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="guard" x="298" y="128">x==95</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="378" y="191">warning!</label>
+		</transition>
+	</template>
+	<system>
+
+//Edit system definition.
+system 
+  User,
+  AccessControl;
+</system>
+	<queries>
+		<query>
+			<formula>A[] not(User.Using &amp;&amp; pinvalue != AccessControl.pin)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] not(User.PowerOff &amp;&amp; AccessControl.x &lt; 100)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] (AccessControl.Working imply User.Using)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] not deadlock
+</formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

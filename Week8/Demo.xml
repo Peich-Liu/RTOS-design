@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.</declaration>
+	<template>
+		<name>P0</name>
+		<location id="id0" x="0" y="0">
+			<label kind="exponentialrate" x="-8" y="25">1:4</label>
+		</location>
+		<location id="id1" x="170" y="0">
+			<name x="160" y="-34">END</name>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+		</transition>
+	</template>
+	<template>
+		<name>P1</name>
+		<declaration>clock x;
+</declaration>
+		<location id="id2" x="-136" y="-102">
+			<name x="-144" y="-85">END</name>
+		</location>
+		<location id="id3" x="-306" y="-102">
+			<label kind="invariant" x="-316" y="-85">x&lt;=4</label>
+		</location>
+		<init ref="id3"/>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-288" y="-136">x&gt;=2</label>
+		</transition>
+	</template>
+	<template>
+		<name>P2</name>
+		<declaration>clock x;</declaration>
+		<location id="id4" x="-340" y="-136">
+			<label kind="invariant" x="-350" y="-119">x&lt;=4</label>
+		</location>
+		<location id="id5" x="-170" y="-136">
+			<label kind="invariant" x="-180" y="-119">x&lt;=4</label>
+		</location>
+		<location id="id6" x="0" y="-136">
+			<name x="-8" y="-119">END</name>
+		</location>
+		<init ref="id4"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-152" y="-170">x&gt;=2</label>
+			<label kind="assignment" x="-102" y="-136">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="guard" x="-322" y="-170">x&gt;=2</label>
+			<label kind="assignment" x="-289" y="-136">x = 0</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Pa</name>
+		<declaration>// Place local declarations here.
+clock x;</declaration>
+		<location id="id7" x="0" y="0">
+			<label kind="invariant" x="-10" y="17">x&lt;=4</label>
+		</location>
+		<location id="id8" x="170" y="0">
+			<label kind="invariant" x="160" y="17">x&lt;=4</label>
+		</location>
+		<location id="id9" x="340" y="0">
+			<label kind="invariant" x="330" y="17">x&lt;=4</label>
+		</location>
+		<location id="id10" x="510" y="0">
+			<name x="501" y="17">END</name>
+		</location>
+		<init ref="id7"/>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="guard" x="358" y="-34">x&gt;=2</label>
+			<label kind="assignment" x="399" y="0">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="guard" x="188" y="-34">x&gt;=2</label>
+			<label kind="assignment" x="238" y="0">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+			<label kind="guard" x="18" y="-34">x&gt;=2</label>
+			<label kind="assignment" x="51" y="0">x = 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Pb</name>
+		<declaration>clock x;
+</declaration>
+		<location id="id11" x="-272" y="-102">
+			<label kind="invariant" x="-282" y="-85">x&lt;=4</label>
+		</location>
+		<location id="id12" x="-102" y="-102">
+			<label kind="invariant" x="-112" y="-85">x&lt;=4</label>
+		</location>
+		<location id="id13" x="68" y="-102">
+			<label kind="invariant" x="58" y="-85">x&lt;=4</label>
+		</location>
+		<location id="id14" x="238" y="-102">
+			<name x="195" y="-85">END</name>
+		</location>
+		<location id="id15" x="-272" y="34">
+			<label kind="invariant" x="-282" y="51">x&lt;=4</label>
+		</location>
+		<location id="id16" x="-102" y="34">
+			<label kind="invariant" x="-112" y="51">x&lt;=4</label>
+		</location>
+		<location id="id17" x="-442" y="-34">
+			<urgent/>
+		</location>
+		<branchpoint id="id18" x="-374" y="-34">
+		</branchpoint>
+		<init ref="id17"/>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id18"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id15"/>
+			<label kind="probability" x="-357" y="-8">5</label>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id11"/>
+			<label kind="probability" x="-357" y="-85">1</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id14"/>
+			<label kind="guard" x="86" y="-136">x&gt;=2</label>
+			<label kind="assignment" x="127" y="-102">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-84" y="-136">x&gt;=2</label>
+			<label kind="assignment" x="-34" y="-102">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-254" y="-136">x&gt;=2</label>
+			<label kind="assignment" x="-221" y="-102">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id14"/>
+			<label kind="guard" x="-84" y="0">x&gt;=2</label>
+			<label kind="assignment" x="-34" y="34">x = 0</label>
+			<nail x="238" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-254" y="0">x&gt;=2</label>
+			<label kind="assignment" x="-221" y="34">x = 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Pc</name>
+		<declaration>clock x;</declaration>
+		<location id="id19" x="-408" y="0">
+			<label kind="exponentialrate" x="-416" y="25">1:2</label>
+		</location>
+		<location id="id20" x="-204" y="-68">
+			<label kind="exponentialrate" x="-214" y="-34">2</label>
+		</location>
+		<location id="id21" x="-204" y="68">
+			<label kind="exponentialrate" x="-214" y="102">1:4</label>
+		</location>
+		<location id="id22" x="-68" y="0">
+			<name x="-78" y="-34">END</name>
+		</location>
+		<branchpoint id="id23" x="-340" y="0">
+		</branchpoint>
+		<init ref="id19"/>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id22"/>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id22"/>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id21"/>
+			<label kind="probability" x="-323" y="25">3</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id20"/>
+			<label kind="probability" x="-323" y="-42">1</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id23"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+
+// List one or more processes to be composed into a system.
+system P0, P1, P2, Pa, Pb, Pc;
+    </system>
+	<queries>
+		<query>
+			<formula>A&lt;&gt; P1.END
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>simulate [&lt;=15; 100] { P1.END }
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=15] ( &lt;&gt;  P0.END )</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=15; 100000] ( &lt;&gt;  P1.END )
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=15; 100000] ( &lt;&gt;  P2.END )</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=15; 100000] ( &lt;&gt;  Pa.END )</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=15; 100000] ( &lt;&gt;  Pb.END )</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=15; 100000] ( &lt;&gt;  Pc.END )</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment>Dummy end marker enabling insertion at end</comment>
+		</query>
+	</queries>
+</nta>

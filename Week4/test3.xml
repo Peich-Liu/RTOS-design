@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+chan c;
+int var = 0, in = 1, out = 2;</declaration>
+	<template>
+		<name x="5" y="5">send</name>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id0" x="-790" y="-740">
+		</location>
+		<location id="id1" x="-790" y="-629">
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-790" y="-701">c!</label>
+			<label kind="assignment" x="-790" y="-684">var := out</label>
+		</transition>
+	</template>
+	<template>
+		<name>receive</name>
+		<location id="id2" x="-289" y="-271">
+		</location>
+		<location id="id3" x="-289" y="-153">
+			<label kind="invariant" x="-297" y="-136">in == 2</label>
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-272" y="-229">c?</label>
+			<label kind="assignment" x="-272" y="-212">in := var,
+var := 0</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+// List one or more processes to be composed into a system.
+system send ,receive;
+    </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

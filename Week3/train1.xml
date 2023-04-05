@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>chan approach;
+chan leave;
+chan lower;
+chan raise;
+</declaration>
+	<template>
+		<name x="5" y="5">Train</name>
+		<declaration>//Insert local declarations of clocks, variables and constants.
+clock x;</declaration>
+		<location id="id0" x="68" y="34">
+			<name x="58" y="4">l0</name>
+		</location>
+		<location id="id1" x="170" y="34">
+			<name x="160" y="4">l1</name>
+			<label kind="invariant" x="186" y="10">x&lt;=5</label>
+		</location>
+		<location id="id2" x="170" y="136">
+			<name x="162" y="152">l2</name>
+			<label kind="invariant" x="186" y="136">x&lt;=5</label>
+		</location>
+		<location id="id3" x="68" y="136">
+			<name x="60" y="152">l3</name>
+			<label kind="invariant" x="8" y="144">x &lt;= 5</label>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="80" y="-8">approach!</label>
+			<label kind="assignment" x="96" y="8">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="178" y="76">x&gt;=3</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="17" y="76">leave!</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Gate</name>
+		<declaration>clock y;
+clock z;</declaration>
+		<location id="id4" x="272" y="136">
+			<name x="262" y="106">l0</name>
+		</location>
+		<location id="id5" x="374" y="136">
+			<name x="364" y="106">l1</name>
+			<label kind="invariant" x="390" y="112">y&lt;=1</label>
+		</location>
+		<location id="id6" x="374" y="238">
+			<name x="366" y="254">l2</name>
+		</location>
+		<location id="id7" x="272" y="238">
+			<name x="264" y="254">l3</name>
+			<label kind="invariant" x="215" y="238">y&lt;=2</label>
+		</location>
+		<init ref="id4"/>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="297" y="110">lower?</label>
+			<label kind="assignment" x="297" y="136">y:=0,
+z:=0</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="306" y="238">raise?</label>
+			<label kind="assignment" x="306" y="255">y:=0</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id4"/>
+			<label kind="guard" x="216" y="168">y&gt;=1</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Controller</name>
+		<declaration>clock w; </declaration>
+		<location id="id8" x="170" y="68">
+			<name x="160" y="38">l0</name>
+		</location>
+		<location id="id9" x="272" y="68">
+			<name x="262" y="38">l1</name>
+			<label kind="invariant" x="288" y="52">w&lt;=1</label>
+		</location>
+		<location id="id10" x="272" y="170">
+			<name x="264" y="186">l2</name>
+		</location>
+		<location id="id11" x="170" y="170">
+			<name x="162" y="186">l3</name>
+			<label kind="invariant" x="112" y="171">w&lt;=1</label>
+		</location>
+		<init ref="id8"/>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="178" y="25">approach?</label>
+			<label kind="assignment" x="195" y="42">w:=0</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="guard" x="280" y="119">w==1</label>
+			<label kind="synchronisation" x="280" y="102">lower!</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="204" y="170">leave?</label>
+			<label kind="assignment" x="204" y="187">w:=0</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="127" y="110">raise!</label>
+		</transition>
+	</template>
+	<system>//Insert process assignments.
+
+//Edit system definition.
+system Train, Gate, Controller;</system>
+	<queries>
+		<query>
+			<formula>A[] Train.l2 imply Gate.l2</formula>
+			<comment>When the train is inside the gate, the gate should be closed.</comment>
+		</query>
+		<query>
+			<formula>A[] not deadlock </formula>
+			<comment>The system cannot deadlock.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; Train.l1</formula>
+			<comment>The train can approach the gate.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; Train.l2</formula>
+			<comment>The train can be in the gate.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; Train.l3</formula>
+			<comment>The train can exit the gate.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; Gate.l3</formula>
+			<comment>The gate can be raised.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; Gate.l1</formula>
+			<comment>The gate can be raised.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; Controller.l2</formula>
+			<comment>The controller can lower the gate.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; Controller.l0</formula>
+			<comment>The controller can raise the gate.</comment>
+		</query>
+		<query>
+			<formula>Train.l1 --&gt; Train.l3</formula>
+			<comment>Whenever the train approaches the gate, it will inevitably cross it.</comment>
+		</query>
+		<query>
+			<formula>Gate.l1 --&gt; Gate.l3</formula>
+			<comment>Whenever the gate is lowering, it will inevitably be raising again.</comment>
+		</query>
+		<query>
+			<formula>Gate.l1 --&gt; (Gate.l0 &amp;&amp; Gate.z &lt;= 10)</formula>
+			<comment>The gate is never closed (or lowering/raising) for more than 10 minutes at a time.</comment>
+		</query>
+		<query>
+			<formula>Gate.l1 --&gt; (Gate.l0 &amp;&amp; Gate.z &gt;= 3)</formula>
+			<comment>The gate is closed for at leaset minutes at a time.</comment>
+		</query>
+		<query>
+			<formula>Gate.l1 --&gt; (Gate.l0 &amp;&amp; Gate.z &lt;= 7)</formula>
+			<comment>The gate is closed for at most 7 minutes at a time.</comment>
+		</query>
+	</queries>
+</nta>

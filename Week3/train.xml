@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+chan leave, approach, open, close;
+</declaration>
+	<template>
+		<name x="5" y="5">train</name>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id0" x="-756" y="-986">
+			<name x="-766" y="-1020">location0</name>
+		</location>
+		<location id="id1" x="-1003" y="-799">
+			<name x="-1013" y="-833">location3</name>
+		</location>
+		<location id="id2" x="-714" y="-603">
+			<name x="-724" y="-637">location2</name>
+		</location>
+		<location id="id3" x="-476" y="-816">
+			<name x="-486" y="-850">location1</name>
+		</location>
+		<location id="id4" x="-620" y="-901">
+			<name x="-620" y="-935">approach_signal</name>
+		</location>
+		<location id="id5" x="-884" y="-892">
+			<name x="-969" y="-926">leave_signal</name>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-866" y="-956">leave?</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id5"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id3"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-738" y="-960">open?</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id1"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+		</transition>
+	</template>
+	<template>
+		<name>gate</name>
+		<location id="id6" x="-357" y="-68">
+			<name x="-367" y="-102">Open</name>
+		</location>
+		<location id="id7" x="-136" y="-68">
+			<name x="-153" y="-102">Close</name>
+		</location>
+		<init ref="id6"/>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-296" y="-25">open!</label>
+			<nail x="-178" y="-8"/>
+			<nail x="-314" y="-8"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-313" y="-161">close!</label>
+			<nail x="-331" y="-144"/>
+			<nail x="-204" y="-144"/>
+		</transition>
+	</template>
+	<template>
+		<name>controller</name>
+		<location id="id8" x="-85" y="-119">
+			<name x="-95" y="-153">controller</name>
+		</location>
+		<init ref="id8"/>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="-109" y="-76">approach!</label>
+			<nail x="-127" y="-59"/>
+			<nail x="-34" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="-109" y="-204">leave!</label>
+			<nail x="-127" y="-187"/>
+			<nail x="-42" y="-187"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+// List one or more processes to be composed into a system.
+system train,controller;
+    </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+chan signal;</declaration>
+	<template>
+		<name x="5" y="5">Observer</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id0" x="-32" y="-64">
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="40" y="-80">signal?</label>
+			<nail x="32" y="-96"/>
+			<nail x="32" y="-32"/>
+		</transition>
+	</template>
+	<template>
+		<name>Skew</name>
+		<declaration>clock x;</declaration>
+		<location id="id1" x="-160" y="-192">
+			<label kind="invariant" x="-232" y="-184">x &lt;= 11</label>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-216" y="-136">x &gt;= 9</label>
+			<label kind="synchronisation" x="-56" y="-136">signal!</label>
+			<label kind="assignment" x="-208" y="-112">x = 0</label>
+			<nail x="-160" y="-64"/>
+			<nail x="-64" y="-64"/>
+			<nail x="-64" y="-192"/>
+		</transition>
+	</template>
+	<template>
+		<name>Jitter</name>
+		<declaration>clock y;
+</declaration>
+		<location id="id2" x="-128" y="0">
+			<name x="-192" y="-8">Delay</name>
+			<label kind="invariant" x="-152" y="16">y &lt;= 1</label>
+		</location>
+		<location id="id3" x="-128" y="-128">
+			<label kind="invariant" x="-200" y="-120">y &lt;= 10</label>
+		</location>
+		<init ref="id3"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-24" y="-88">signal!</label>
+			<nail x="-32" y="0"/>
+			<nail x="-32" y="-128"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-192" y="-80">y == 10</label>
+			<label kind="assignment" x="-176" y="-56">y = 0</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+
+// List one or more processes to be composed into a system.
+system Skew, Jitter, Observer; </system>
+	<queries>
+		<query>
+			<formula>A[] not(Jitter.Delay or Jitter.time == 4 or Jitter.)</formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>
