@@ -1,0 +1,1053 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+// constants boundaries used by controller
+const int BLOCKED = 70; // Same values as in problem description
+const int YELLOW = 60;
+const int BLACK = 48; 
+
+// Bag Colors 
+const int YELLOW_BAG = 59;
+const int BLACK_BAG = 44;
+const int NO_BAG = 71; // indicates no bag in front of sensor
+const int UNDEF = 100; // value returned by sensor when passive
+typedef int[BLACK_BAG, UNDEF] color_t; // Type for color -- 'Use properly bounded types for all integer variables.'
+
+
+// Number of component instances 
+const int NBAGS = 7;
+const int NSEN = 2;
+const int NFEED = 2;
+const int NCTL = 2;
+
+// Sensors
+typedef int[0, NSEN-1] s_id;
+chan sen_act[s_id], sen_pas[s_id], read_value[s_id], value[s_id]; // sensor controller interface 
+int sen_out[s_id]; // sensor output value 
+bool sen_sta[s_id]; // sensor status
+
+// Feed belts. BUT ONE FEED BELT NOW!
+typedef int[0, NFEED-1] f_id; // 0 left 1 right. 0 is close to A.
+int belt_color[f_id]; 
+bool feed_is_on[f_id];
+chan feed_run[f_id], feed_stop[f_id]; // Should be urgent? same argument as dist_rev. but clock guard
+const f_id FEED_1 = 0;
+const f_id FEED_2 = 1;
+
+
+// Number of bags used in model given by typedef Bags. in [0, n-1] 
+typedef int[0, NBAGS-1] b_id;
+urgent chan go_bag[b_id], stop_bag[b_id]; // To model the user placing bag i on one of the feeder belts. And the motor being stopped on a feed belt.
+urgent chan go_feed_1[b_id], go_feed_2[b_id]; // To model the user placing bag i on one of the two feeder belts. Urgent....?
+bool bag_on_feed[f_id];// = {false,false,false,false,false,false,false};
+chan color_select_black[b_id], color_select_yellow[b_id]; // or initialize with user?
+color_t bag_colors[b_id]; // Determine color of bags in initializer as one of the first things. Predetermined.
+f_id feed_select[b_id];
+
+// Controllers
+typedef int[0, NCTL-1] c_id;
+
+// Distribution belt
+bool db_towards_A = true; // direction of distributionbelt. assume cant stop. used for communication. also encoded in state but how to communicate that to bag?
+urgent chan dist_rev; // Urgent here to reflect that it is somehow an electric signal to stop the motor, not something distribution belt can "ignore"
+chan stop_dis, cont_dis;
+
+
+</declaration>
+	<template>
+		<name x="9" y="9">Bag</name>
+		<parameter>b_id id</parameter>
+		<declaration>// Place local declarations here.
+f_id belt_no;
+clock x, total;
+urgent broadcast chan force_stop; // To force stopping when feed belt is off.
+int color; </declaration>
+		<location id="id0" x="680" y="306">
+			<name x="629" y="289">a1</name>
+			<label kind="invariant" x="697" y="297">x &lt;= 16</label>
+		</location>
+		<location id="id1" x="680" y="578">
+			<name x="646" y="553">c1</name>
+			<label kind="invariant" x="697" y="561">x &lt;= 27</label>
+		</location>
+		<location id="id2" x="952" y="306">
+			<name x="1062" y="297">a2</name>
+			<label kind="invariant" x="969" y="297">x &lt;= 16</label>
+		</location>
+		<location id="id3" x="952" y="510">
+			<name x="961" y="485">b2</name>
+			<label kind="invariant" x="884" y="502">x &lt;= 24</label>
+		</location>
+		<location id="id4" x="952" y="578">
+			<name x="918" y="544">c2</name>
+			<label kind="invariant" x="969" y="561">x &lt;= 27</label>
+		</location>
+		<location id="id5" x="408" y="714">
+			<name x="400" y="680">destA</name>
+			<committed/>
+		</location>
+		<location id="id6" x="544" y="714">
+			<name x="536" y="680">eA</name>
+			<label kind="invariant" x="518" y="731">x &lt;= 12</label>
+		</location>
+		<location id="id7" x="680" y="714">
+			<name x="672" y="680">dA</name>
+			<label kind="invariant" x="646" y="731">x &lt;= 23</label>
+		</location>
+		<location id="id8" x="816" y="714">
+			<name x="808" y="680">f</name>
+			<label kind="invariant" x="790" y="731">x &lt;= 31</label>
+		</location>
+		<location id="id9" x="952" y="714">
+			<name x="944" y="680">dB</name>
+			<label kind="invariant" x="926" y="731">x &lt;= 23</label>
+		</location>
+		<location id="id10" x="1096" y="714">
+			<name x="1087" y="680">eB</name>
+			<label kind="invariant" x="1086" y="731">x &lt;= 12</label>
+		</location>
+		<location id="id11" x="1232" y="714">
+			<name x="1224" y="680">destB</name>
+			<committed/>
+		</location>
+		<location id="id12" x="952" y="34">
+			<label kind="invariant" x="977" y="25">x &lt;= 2</label>
+		</location>
+		<location id="id13" x="952" y="170">
+			<label kind="invariant" x="986" y="161">x &lt;= 14</label>
+		</location>
+		<location id="id14" x="680" y="170">
+			<label kind="invariant" x="705" y="161">x &lt;= 14</label>
+		</location>
+		<location id="id15" x="680" y="34">
+			<label kind="invariant" x="705" y="25">x &lt;= 2</label>
+		</location>
+		<location id="id16" x="816" y="-238">
+		</location>
+		<location id="id17" x="680" y="-102">
+			<name x="603" y="-136">enter_1_1</name>
+			<label kind="comments" x="297" y="-144">Committed here not because of clock,
+but to force simulation to begin</label>
+			<committed/>
+		</location>
+		<location id="id18" x="952" y="-102">
+			<name x="960" y="-136">enter_1_2</name>
+			<committed/>
+		</location>
+		<location id="id19" x="544" y="442">
+		</location>
+		<location id="id20" x="680" y="374">
+			<label kind="invariant" x="697" y="365">x &lt;= 24</label>
+		</location>
+		<location id="id21" x="680" y="510">
+			<label kind="invariant" x="705" y="501">x &lt;= 24</label>
+		</location>
+		<location id="id22" x="952" y="374">
+			<label kind="invariant" x="969" y="357">x &lt;= 24</label>
+		</location>
+		<location id="id23" x="1088" y="442">
+		</location>
+		<location id="id24" x="272" y="714">
+			<name x="262" y="680">doneA</name>
+			<label kind="comments" x="-34" y="773">doneA location is for verifying some properties related to part 6</label>
+		</location>
+		<location id="id25" x="1360" y="714">
+			<name x="1350" y="680">doneB</name>
+		</location>
+		<init ref="id16"/>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id25"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id24"/>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id3"/>
+			<label kind="guard" x="960" y="408">x==24</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id3"/>
+			<label kind="guard" x="1079" y="484">feed_is_on[belt_no]</label>
+			<label kind="synchronisation" x="1079" y="467">stop_bag[belt_no]?</label>
+			<label kind="assignment" x="1079" y="501">x := 12</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id23"/>
+			<label kind="synchronisation" x="1037" y="399">stop_bag[belt_no]?</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id19"/>
+			<label kind="synchronisation" x="459" y="391">stop_bag[belt_no]?</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id21"/>
+			<label kind="guard" x="688" y="408">x == 24</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id21"/>
+			<label kind="guard" x="442" y="476">feed_is_on[belt_no]</label>
+			<label kind="synchronisation" x="442" y="459">stop_bag[belt_no]?</label>
+			<label kind="assignment" x="442" y="493">x := 12</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id1"/>
+			<label kind="guard" x="510" y="518">x == 24 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="510" y="552">x := 0</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id20"/>
+			<label kind="guard" x="408" y="297">x == 16 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="408" y="331">x := 0,
+belt_color[belt_no] := BLOCKED + 1,
+bag_on_feed[belt_no] := false</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="875" y="-263">go_feed_2[id]?</label>
+			<label kind="assignment" x="875" y="-238">belt_no := 1,
+bag_on_feed[belt_no] := true,
+color := bag_colors[id],
+total := 0</label>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id12"/>
+			<label kind="guard" x="748" y="-34">feed_is_on[belt_no]</label>
+			<label kind="assignment" x="748" y="-17">x := 0,
+belt_color[belt_no] := color + 3</label>
+			<nail x="918" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id15"/>
+			<label kind="guard" x="442" y="-76">feed_is_on[belt_no]</label>
+			<label kind="assignment" x="442" y="-59">x := 0,
+belt_color[belt_no] := color+3</label>
+			<nail x="646" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="544" y="-255">go_feed_1[id]?</label>
+			<label kind="assignment" x="544" y="-238">belt_no := 0,
+bag_on_feed[belt_no] := true,
+color := bag_colors[id],
+total := 0</label>
+			<label kind="comments" x="306" y="-314">This transition sort of artificial. To set belt_no etc</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id0"/>
+			<label kind="guard" x="442" y="195">x == 14 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="442" y="229">belt_color[belt_no] := color + 3</label>
+			<nail x="646" y="238"/>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id14"/>
+			<label kind="guard" x="442" y="59">x == 2 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="442" y="101">belt_color[belt_no] := color</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id2"/>
+			<label kind="guard" x="748" y="238">x == 14 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="748" y="280">belt_color[belt_no] := color + 3</label>
+			<nail x="918" y="238"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id13"/>
+			<label kind="guard" x="986" y="68">x == 2 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="986" y="102">belt_color[belt_no] := color</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="guard" x="994" y="765">x &gt;= 22 &amp;&amp; 
+!db_towards_A</label>
+			<label kind="assignment" x="1011" y="748">x := 0</label>
+			<nail x="1020" y="731"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="guard" x="850" y="765">x &gt;= 25 &amp;&amp; 
+!db_towards_A</label>
+			<label kind="assignment" x="867" y="748">x := 0</label>
+			<nail x="884" y="731"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id8"/>
+			<label kind="guard" x="722" y="595">x &gt;= 24 &amp;&amp;
+!db_towards_A &amp;&amp;
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="739" y="646">x := 0</label>
+			<nail x="722" y="663"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id9"/>
+			<label kind="guard" x="986" y="680">x &gt;= 10 &amp;&amp; 
+db_towards_A</label>
+			<label kind="assignment" x="1003" y="705">x := 0</label>
+			<nail x="1020" y="697"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="guard" x="867" y="680">x &gt;= 22 &amp;&amp; 
+db_towards_A</label>
+			<label kind="assignment" x="867" y="705">x := 0</label>
+			<nail x="884" y="697"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+			<label kind="guard" x="705" y="765">x &gt;= 22 &amp;&amp; 
+!db_towards_A</label>
+			<label kind="assignment" x="731" y="748">x := 0</label>
+			<nail x="748" y="731"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="guard" x="714" y="680">x &gt;= 25 &amp;&amp; 
+db_towards_A</label>
+			<label kind="assignment" x="731" y="705">x := 0</label>
+			<nail x="748" y="697"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id10"/>
+			<label kind="guard" x="994" y="612">x &gt;= 24 &amp;&amp;
+!db_towards_A &amp;&amp;
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="1011" y="646">x := 0</label>
+			<nail x="1003" y="663"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="guard" x="1147" y="739">x &gt;= 10 &amp;&amp; 
+!db_towards_A</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id5"/>
+			<label kind="guard" x="442" y="714">x &gt;= 10 &amp;&amp; 
+db_towards_A</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="guard" x="578" y="765">x &gt;= 10 &amp;&amp; 
+!db_towards_A</label>
+			<label kind="assignment" x="586" y="748">x := 0</label>
+			<nail x="612" y="731"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id6"/>
+			<label kind="guard" x="586" y="680">x &gt;= 22 &amp;&amp; 
+db_towards_A</label>
+			<label kind="assignment" x="595" y="705">x := 0</label>
+			<nail x="612" y="697"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id8"/>
+			<label kind="guard" x="858" y="620">x &gt;= 24 &amp;&amp;
+db_towards_A &amp;&amp;
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="918" y="646">x := 0</label>
+			<nail x="909" y="654"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id6"/>
+			<label kind="guard" x="569" y="603">x &gt;= 24 &amp;&amp;
+db_towards_A &amp;&amp;
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="399" y="603">x := 0</label>
+			<nail x="629" y="663"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="guard" x="977" y="510">x == 24 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="977" y="544">x := 0</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id22"/>
+			<label kind="guard" x="1096" y="306">x == 16 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="1088" y="340">x := 0, 
+belt_color[belt_no] := BLOCKED + 1,
+bag_on_feed[belt_no] := false</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id15"/>
+			<label kind="guard" x="705" y="-110">feed_is_on[belt_no]</label>
+			<label kind="assignment" x="705" y="-93">x := 0,
+belt_color[belt_no] := color+6</label>
+			<nail x="714" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id0"/>
+			<label kind="guard" x="705" y="178">x == 14 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="705" y="212">belt_color[belt_no] := color + 6</label>
+			<nail x="714" y="238"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id12"/>
+			<label kind="guard" x="994" y="-59">feed_is_on[belt_no]</label>
+			<label kind="assignment" x="994" y="-42">x := 0,
+belt_color[belt_no] := color + 6</label>
+			<nail x="986" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id2"/>
+			<label kind="guard" x="994" y="195">x == 14 &amp;&amp; 
+feed_is_on[belt_no]</label>
+			<label kind="assignment" x="994" y="238">belt_color[belt_no] := color + 6</label>
+			<nail x="986" y="238"/>
+		</transition>
+	</template>
+	<template>
+		<name>DistributionBelt1</name>
+		<location id="id26" x="-612" y="-272">
+			<name x="-622" y="-306">Towards_B</name>
+		</location>
+		<location id="id27" x="-612" y="-136">
+			<name x="-637" y="-68">Towards_A</name>
+		</location>
+		<location id="id28" x="-790" y="-204">
+			<name x="-800" y="-238">WillRevsA</name>
+			<committed/>
+		</location>
+		<location id="id29" x="-442" y="-204">
+			<name x="-452" y="-238">WillRevsB</name>
+			<committed/>
+		</location>
+		<init ref="id27"/>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-773" y="-161">dist_rev?</label>
+			<label kind="assignment" x="-816" y="-136">db_towards_A := false</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id27"/>
+		</transition>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id29"/>
+			<label kind="synchronisation" x="-510" y="-289">dist_rev?</label>
+			<label kind="assignment" x="-501" y="-272">db_towards_A := true</label>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id26"/>
+		</transition>
+	</template>
+	<template>
+		<name>Initializer</name>
+		<declaration>// specify configuration of colors and feed belt selection here
+int bag_colors_local[b_id] = {BLACK_BAG, YELLOW_BAG, BLACK_BAG, YELLOW_BAG, YELLOW_BAG, BLACK_BAG, BLACK_BAG}; 
+int feed_select_local[b_id] = {FEED_1, FEED_2, FEED_1, FEED_2, FEED_2, FEED_1, FEED_1};
+
+void initialize () {
+    for (id : f_id) { 
+        belt_color[id] = NO_BAG;
+        feed_is_on[id] = true;    
+    } 
+
+    for (id : b_id) {
+        bag_colors[id] = bag_colors_local[id];
+        feed_select[id] = feed_select_local[id];
+    }
+
+    for (id : s_id) {
+        sen_out[id] = UNDEF;
+    }
+}
+    </declaration>
+		<location id="id30" x="0" y="0">
+			<committed/>
+		</location>
+		<location id="id31" x="136" y="0">
+			<name x="126" y="-34">after</name>
+		</location>
+		<init ref="id30"/>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id31"/>
+			<label kind="assignment" x="25" y="-34">initialize()</label>
+		</transition>
+	</template>
+	<template>
+		<name>User1</name>
+		<location id="id32" x="0" y="0">
+		</location>
+		<init ref="id32"/>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="-59" y="76">feed_stop[1]!</label>
+			<nail x="0" y="68"/>
+			<nail x="-34" y="59"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="68" y="51">feed_stop[0]!</label>
+			<nail x="59" y="51"/>
+			<nail x="34" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="59" y="-17">feed_run[1]!</label>
+			<nail x="110" y="0"/>
+			<nail x="102" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="25" y="-93">feed_run[0]!</label>
+			<nail x="34" y="-76"/>
+			<nail x="76" y="-51"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="-136" y="-93">dist_rev!</label>
+			<nail x="-93" y="-51"/>
+			<nail x="-68" y="-76"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id32"/>
+			<label kind="select" x="-255" y="-8">which : b_id</label>
+			<label kind="synchronisation" x="-255" y="17">go_bag[which]!</label>
+			<nail x="-110" y="34"/>
+			<nail x="-110" y="0"/>
+		</transition>
+	</template>
+	<template>
+		<name>User</name>
+		<declaration>clock x;
+int bag_no = 0;
+int bag_colors[b_id] = {BLACK_BAG, YELLOW_BAG, BLACK_BAG, YELLOW_BAG, YELLOW_BAG, BLACK_BAG, BLACK_BAG};
+urgent broadcast chan go;</declaration>
+		<location id="id33" x="0" y="0">
+			<label kind="comments" x="-25" y="127">1.4 seconds separation of bags at check ins
+
+Avoid unnecessary non-determinacy, 
+such as allowing the bags to enter in arbitrary
+order --&gt; DO not use select</label>
+		</location>
+		<location id="id34" x="102" y="-102">
+		</location>
+		<init ref="id33"/>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id34"/>
+			<label kind="guard" x="195" y="-42">bag_no &lt; NBAGS&amp;&amp;
+feed_select[bag_no] == FEED_1</label>
+			<label kind="synchronisation" x="187" y="-59">go_feed_1[bag_no]!</label>
+			<nail x="187" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id34"/>
+			<target ref="id33"/>
+			<label kind="guard" x="-280" y="-68">sen_sta[0] == 1 &amp;&amp;
+feed_is_on[0] == true&amp;&amp;
+bag_on_feed[0] == false&amp;&amp;
+bag_no &lt; NBAGS</label>
+			<label kind="synchronisation" x="-246" y="-93">go!</label>
+			<label kind="assignment" x="-51" y="-102">x := 0,
+bag_no++</label>
+			<nail x="34" y="-68"/>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id34"/>
+			<label kind="guard" x="8" y="34">bag_no &lt; NBAGS&amp;&amp;
+feed_select[bag_no] == FEED_2</label>
+			<label kind="synchronisation" x="0" y="17">go_feed_2[bag_no]!</label>
+			<nail x="68" y="-34"/>
+		</transition>
+	</template>
+	<template>
+		<name>User_task8</name>
+		<declaration>clock x;
+int bag_no = 0;
+int bag_colors[b_id] = {BLACK_BAG, YELLOW_BAG, BLACK_BAG, YELLOW_BAG, YELLOW_BAG, BLACK_BAG, BLACK_BAG};
+
+const int FEED_1 = 0;
+const int FEED_2 = 1;
+int bag_feed_enter[b_id] = {FEED_1, FEED_1, FEED_2, FEED_1, FEED_2, FEED_2, FEED_1};
+
+urgent broadcast chan go;</declaration>
+		<location id="id35" x="-390" y="-162">
+		</location>
+		<location id="id36" x="-288" y="-264">
+		</location>
+		<init ref="id35"/>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id36"/>
+			<label kind="guard" x="-603" y="-119">bag_no &lt; NBAGS &amp;&amp;
+feed_select[bag_no] == FEED_1</label>
+			<label kind="synchronisation" x="-603" y="-136">go_feed_1[bag_no]!</label>
+			<label kind="assignment" x="-595" y="-76">x := 0</label>
+			<nail x="-323" y="-187"/>
+		</transition>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-670" y="-230">sen_sta[0] == 1 &amp;&amp;
+feed_is_on[0] == true &amp;&amp;
+bag_no &lt; NBAGS &amp;&amp;
+x &gt;= 131</label>
+			<label kind="assignment" x="-441" y="-264">bag_no++</label>
+			<label kind="comments" x="-527" y="-365">Safe after 131 time units?</label>
+			<nail x="-365" y="-238"/>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id36"/>
+			<label kind="guard" x="-263" y="-93">bag_no &lt; NBAGS &amp;&amp;
+feed_select[bag_no] == FEED_2</label>
+			<label kind="synchronisation" x="-263" y="-119">go_feed_2[bag_no]!</label>
+			<label kind="assignment" x="-263" y="-51">x := 0</label>
+			<nail x="-348" y="-212"/>
+		</transition>
+	</template>
+	<template>
+		<name>Controller</name>
+		<parameter>c_id id</parameter>
+		<declaration>clock t, distro;
+int done;
+bool close_to_A, dest_A;
+int color = NO_BAG; // important initialization because the way things are modelled !(blocked &gt; BLOCKED)...
+
+urgent broadcast chan go; // to model the call to e.poll(), waiting for change in sensor value
+
+bool closeToA() {
+    return id == 0;
+}</declaration>
+		<location id="id37" x="-3910" y="-4964">
+			<urgent/>
+		</location>
+		<location id="id38" x="-3910" y="-4556">
+			<name x="-3893" y="-4573">Sleep_1</name>
+			<label kind="invariant" x="-3893" y="-4530">t &lt;= 8</label>
+		</location>
+		<location id="id39" x="-3986" y="-3842">
+			<name x="-4088" y="-3850">Not_Reverse</name>
+			<committed/>
+		</location>
+		<location id="id40" x="-3782" y="-3859">
+			<name x="-3765" y="-3876">Need_Reverse</name>
+			<committed/>
+		</location>
+		<location id="id41" x="-3783" y="-3791">
+			<name x="-3765" y="-3799">Sleep_3</name>
+			<label kind="invariant" x="-3698" y="-3800">distro&lt;=done</label>
+			<label kind="comments" x="-3605" y="-3800">done_0==0</label>
+		</location>
+		<location id="id42" x="-3783" y="-3689">
+			<name x="-3757" y="-3697">Reverse_Motor</name>
+			<committed/>
+		</location>
+		<location id="id43" x="-3987" y="-3689">
+			<committed/>
+		</location>
+		<location id="id44" x="-3987" y="-3544">
+			<name x="-3970" y="-3553">Sleep_4</name>
+			<label kind="invariant" x="-3893" y="-3552">t &lt;= 12</label>
+		</location>
+		<location id="id45" x="-3910" y="-4828">
+			<label kind="comments" x="-3731" y="-4777">int my_motor, chan &amp;sen_act, chan &amp;sen_pas, chan &amp;read_value, chan &amp;value</label>
+			<committed/>
+		</location>
+		<location id="id46" x="-3910" y="-3935">
+			<label kind="invariant" x="-3893" y="-3935">t &lt;= 28</label>
+		</location>
+		<location id="id47" x="-3910" y="-4148">
+			<committed/>
+		</location>
+		<location id="id48" x="-3918" y="-3689">
+			<committed/>
+		</location>
+		<location id="id49" x="-3910" y="-4683">
+		</location>
+		<location id="id50" x="-3757" y="-3944">
+			<committed/>
+		</location>
+		<location id="id51" x="-3850" y="-3689">
+			<committed/>
+		</location>
+		<init ref="id37"/>
+		<transition>
+			<source ref="id51"/>
+			<target ref="id48"/>
+			<label kind="synchronisation" x="-3910" y="-3672">dist_rev!</label>
+		</transition>
+		<transition>
+			<source ref="id50"/>
+			<target ref="id40"/>
+			<label kind="synchronisation" x="-3850" y="-3910">stop_bag[id]!</label>
+		</transition>
+		<transition>
+			<source ref="id47"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="-3901" y="-4054">sen_pas[id]!</label>
+		</transition>
+		<transition>
+			<source ref="id49"/>
+			<target ref="id38"/>
+			<label kind="guard" x="-4097" y="-4658">! (sen_out[id] &gt; BLOCKED)</label>
+			<label kind="synchronisation" x="-4012" y="-4641">go!</label>
+			<label kind="assignment" x="-4156" y="-4607">t := 0</label>
+			<label kind="comments" x="-3621" y="-4726">Kind of weird here. 
+
+To model call to e.poll(). 
+VM polls sensor for change in some bitmask. 
+Decision here is that poll() is "out of scope of this model"
+Also a while loop in code that is left out here. 
+We break the illusion that we have to go through the 
+sensor to access the color of the bag here to model 
+the poll() here. 
+
+But to reflect code important that we do not move on 
+from this point before changes in sensor value</label>
+		</transition>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id49"/>
+			<label kind="synchronisation" x="-4020" y="-4751">sen_act[id]!</label>
+		</transition>
+		<transition>
+			<source ref="id48"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-3986" y="-3663">stop_bag[id]!</label>
+		</transition>
+		<transition>
+			<source ref="id42"/>
+			<target ref="id51"/>
+			<label kind="synchronisation" x="-3842" y="-3663">feed_run[id]!</label>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id47"/>
+			<label kind="guard" x="-3884" y="-4420">t == 8</label>
+			<label kind="assignment" x="-3893" y="-4377">color := sen_out[id],
+dest_A := (color &lt;= BLACK)</label>
+		</transition>
+		<transition>
+			<source ref="id44"/>
+			<target ref="id45"/>
+			<label kind="guard" x="-4139" y="-3536">t == 12</label>
+			<label kind="assignment" x="-4156" y="-3578">color := BLOCKED + 1</label>
+			<nail x="-4182" y="-3544"/>
+			<nail x="-4182" y="-4828"/>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id42"/>
+			<label kind="guard" x="-3927" y="-3808">distro &gt;= done</label>
+			<nail x="-3834" y="-3774"/>
+		</transition>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id50"/>
+			<label kind="guard" x="-3859" y="-4003">t == 28 &amp;&amp;
+(db_towards_A  != dest_A)</label>
+			<label kind="synchronisation" x="-3859" y="-4029">feed_stop[id]!</label>
+			<label kind="comments" x="-3570" y="-3978">If distribution is moving in the opposite direction of 
+destination of bag. 
+... if ( Motor . C . isForward () != destA ) { // Must stop
+myMotor . stop ();
+...
+
+Check not blocked similar to ? 
+while ( mySensor . readValue () &gt; BLOCKED ...
+pleaseee</label>
+		</transition>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id39"/>
+			<label kind="guard" x="-4148" y="-3927">t == 28 &amp;&amp;
+(db_towards_A == dest_A)</label>
+		</transition>
+		<transition>
+			<source ref="id37"/>
+			<target ref="id45"/>
+			<label kind="assignment" x="-3884" y="-4913">close_to_A := closeToA(),
+done := 0</label>
+		</transition>
+		<transition>
+			<source ref="id43"/>
+			<target ref="id44"/>
+			<label kind="assignment" x="-3952" y="-3612">t := 0,
+done :=  60 * (1 + (close_to_A != db_towards_A)),
+distro := 0</label>
+			<label kind="comments" x="-3527" y="-3621">Fine to reset t here and set done to 60 or 120 here
+Because we only reset here (and initially). 
+So like subtract a constant somehow
+wait changed it not sure anymoreeeee</label>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id43"/>
+		</transition>
+		<transition>
+			<source ref="id41"/>
+			<target ref="id42"/>
+			<label kind="guard" x="-3766" y="-3774">distro == done</label>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id41"/>
+			<label kind="guard" x="-3748" y="-3833">distro &lt; done</label>
+		</transition>
+	</template>
+	<template>
+		<name>Sensor</name>
+		<parameter>s_id id</parameter>
+		<declaration>urgent broadcast chan sensor_update;</declaration>
+		<location id="id52" x="0" y="0">
+		</location>
+		<location id="id53" x="136" y="0">
+		</location>
+		<init ref="id52"/>
+		<transition>
+			<source ref="id53"/>
+			<target ref="id53"/>
+			<label kind="guard" x="204" y="-34">sen_out[id] != belt_color[id]</label>
+			<label kind="synchronisation" x="204" y="-17">sensor_update!</label>
+			<label kind="assignment" x="204" y="0">sen_out[id] := belt_color[id]</label>
+			<nail x="178" y="-25"/>
+			<nail x="178" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id53"/>
+			<target ref="id52"/>
+			<label kind="synchronisation" x="42" y="42">sen_pas[id]?</label>
+			<label kind="assignment" x="34" y="68">sen_sta[id] := 0,
+sen_out[id] := UNDEF</label>
+			<nail x="68" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id52"/>
+			<target ref="id53"/>
+			<label kind="synchronisation" x="34" y="-76">sen_act[id]?</label>
+			<label kind="assignment" x="34" y="-59">sen_sta[id] := 1</label>
+			<nail x="68" y="-34"/>
+		</transition>
+	</template>
+	<template>
+		<name>DistributionBelt2</name>
+		<location id="id54" x="-170" y="-68">
+			<name x="-238" y="-102">Towards_A</name>
+		</location>
+		<location id="id55" x="0" y="-68">
+			<name x="-8" y="-102">Towards_B</name>
+		</location>
+		<location id="id56" x="-76" y="102">
+			<name x="-93" y="110">Stop</name>
+		</location>
+		<init ref="id54"/>
+		<transition>
+			<source ref="id56"/>
+			<target ref="id55"/>
+			<label kind="synchronisation" x="-59" y="34">cont_dis?</label>
+		</transition>
+		<transition>
+			<source ref="id56"/>
+			<target ref="id54"/>
+			<label kind="synchronisation" x="-153" y="34">cont_dis?</label>
+		</transition>
+		<transition>
+			<source ref="id55"/>
+			<target ref="id56"/>
+			<label kind="synchronisation" x="-58" y="85">stop_dis?</label>
+			<nail x="0" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id54"/>
+			<target ref="id56"/>
+			<label kind="synchronisation" x="-152" y="85">stop_dis?</label>
+			<nail x="-170" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id55"/>
+			<target ref="id54"/>
+			<label kind="synchronisation" x="-119" y="-25">dist_rev?</label>
+			<label kind="assignment" x="-136" y="-8">db_towards_A := true</label>
+			<nail x="-85" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id54"/>
+			<target ref="id55"/>
+			<label kind="synchronisation" x="-127" y="-144">dist_rev?</label>
+			<label kind="assignment" x="-144" y="-127">db_towards_A := false</label>
+			<nail x="-85" y="-102"/>
+		</transition>
+	</template>
+	<template>
+		<name>FeedBelt</name>
+		<parameter>f_id id</parameter>
+		<location id="id57" x="-85" y="42">
+			<name x="-59" y="42">Off</name>
+		</location>
+		<location id="id58" x="-93" y="-170">
+			<name x="-103" y="-204">On</name>
+		</location>
+		<init ref="id58"/>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id58"/>
+			<label kind="synchronisation" x="-42" y="-93">feed_run[id]?</label>
+			<label kind="assignment" x="-42" y="-76">feed_is_on[id] := true</label>
+			<nail x="-51" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id58"/>
+			<target ref="id57"/>
+			<label kind="synchronisation" x="-323" y="-85">feed_stop[id]?</label>
+			<label kind="assignment" x="-323" y="-68">feed_is_on[id] := false</label>
+			<nail x="-127" y="-59"/>
+		</transition>
+	</template>
+	<template>
+		<name>DistributionBelt</name>
+		<location id="id59" x="-85" y="-68">
+			<name x="-76" y="-93">Reversing</name>
+			<committed/>
+		</location>
+		<location id="id60" x="-238" y="-68">
+			<name x="-306" y="-102">Towards_A</name>
+		</location>
+		<location id="id61" x="68" y="-68">
+			<name x="60" y="-102">Towards_B</name>
+		</location>
+		<location id="id62" x="-76" y="102">
+			<name x="-93" y="110">Stop</name>
+		</location>
+		<init ref="id60"/>
+		<transition>
+			<source ref="id59"/>
+			<target ref="id60"/>
+			<label kind="guard" x="-204" y="-68">db_towards_A</label>
+		</transition>
+		<transition>
+			<source ref="id59"/>
+			<target ref="id61"/>
+			<label kind="guard" x="-68" y="-68">!db_towards_A</label>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id61"/>
+			<label kind="synchronisation" x="-42" y="51">cont_dis?</label>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id60"/>
+			<label kind="synchronisation" x="-187" y="51">cont_dis?</label>
+		</transition>
+		<transition>
+			<source ref="id61"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="-34" y="110">stop_dis?</label>
+			<nail x="68" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id60"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="-170" y="110">stop_dis?</label>
+			<nail x="-238" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id61"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="-110" y="-25">dist_rev?</label>
+			<label kind="assignment" x="-136" y="-8">db_towards_A := true</label>
+			<nail x="-85" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id60"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="-187" y="-136">dist_rev?</label>
+			<label kind="assignment" x="-255" y="-119">db_towards_A := false</label>
+			<nail x="-85" y="-102"/>
+		</transition>
+	</template>
+	<system>system DistributionBelt, FeedBelt, Sensor, Bag, User, Controller, Initializer;</system>
+	<queries>
+		<query>
+			<formula>A[] forall(i:b_id) (Bag(i).doneA imply Bag(i).color == BLACK_BAG) and (Bag(i).doneB imply Bag(i).color == YELLOW_BAG)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] (forall(i:b_id) Bag(i).c1 imply forall(i:b_id) !Bag(i).dA) and (forall(i:b_id) Bag(i).c2 imply forall(i:b_id) !Bag(i).dB)</formula>
+			<comment>No collisions take place</comment>
+		</query>
+		<query>
+			<formula>A[] forall(i:b_id) forall(j:b_id) i != j imply ( (!(Bag(i).c1 &amp;&amp; Bag(j).c1) &amp;&amp; !(Bag(i).dA &amp;&amp; Bag(j).dA) &amp;&amp; !(Bag(i).eA &amp;&amp; Bag(j).eA) &amp;&amp; !(Bag(i).f &amp;&amp; Bag(j).f) and !(Bag(i).dB &amp;&amp; Bag(j).dB) and !(Bag(i).eB &amp;&amp; Bag(j).eB) )
+&amp;&amp; (Bag(i).eA &amp;&amp; Bag(i).x == 0 &amp;&amp; Bag(j).dA imply Bag(j).x &lt;= 8)
+&amp;&amp; (Bag(i).eA &amp;&amp; Bag(i).x == 0 &amp;&amp; Bag(j).c1 imply Bag(j).x &lt;= 10)
+&amp;&amp; (Bag(i).eB &amp;&amp; Bag(i).x == 0 &amp;&amp; Bag(j).dB imply Bag(j).x &lt;= 8) 
+&amp;&amp; (Bag(i).eB &amp;&amp; Bag(i).x == 0 &amp;&amp; Bag(j).c2 imply Bag(j).x &lt;= 10) )</formula>
+			<comment>No bumping occurs. </comment>
+		</query>
+		<query>
+			<formula>A[] forall(i:b_id) Bag(i).c1 imply (FeedBelt(0).On &amp;&amp; !DistributionBelt.Reversing &amp;&amp; !DistributionBelt.Stop)</formula>
+			<comment>While a bag is turning (in section c), neither the feed belt nor the distribution belt is stopped or reversed</comment>
+		</query>
+		<query>
+			<formula>A[] forall(i:b_id) (Bag(i).c1 || Bag(i).dA || Bag(i).eA || Bag(i).f || Bag(i).dB || Bag(i).dB) imply !(DistributionBelt.Reversing || DistributionBelt.Stop)</formula>
+			<comment>The distribution belt is never stopped or reversed when it carries a bag</comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; forall(i:b_id) (Bag(i).doneA or Bag(i).doneB)</formula>
+			<comment>Every bag is eventually delivered.</comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>
